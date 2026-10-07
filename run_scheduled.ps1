@@ -35,6 +35,10 @@
 
 .PARAMETER Temporary
     Send each request as a temporary chat (not saved to Gemini history).
+
+.PARAMETER Python
+    Python interpreter to run the loop with (default: the project's
+    .venv if present, otherwise "python").
 #>
 param(
     [string]$CookieFile = (Join-Path $env:USERPROFILE ".gemini-cookies.json"),
@@ -45,11 +49,16 @@ param(
     [ValidateSet("light", "standard", "paranoid")]
     [string]$Level = "standard",
     [string]$LogFile = (Join-Path $env:LOCALAPPDATA "gemini-entropy\requests.jsonl"),
-    [string]$Python = "python",
+    [string]$Python = "",
     [switch]$Temporary
 )
 
 $ErrorActionPreference = "Stop"
+
+if (-not $Python) {
+    $venvPython = Join-Path $ProjectDir ".venv\Scripts\python.exe"
+    $Python = if (Test-Path -LiteralPath $venvPython) { $venvPython } else { "python" }
+}
 
 if (-not (Test-Path -LiteralPath $CookieFile)) {
     Write-Error "Cookie file not found: $CookieFile"
