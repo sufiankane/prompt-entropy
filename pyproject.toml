@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "prompt-entropy"
+version = "0.1.0"
+description = "Inject random messages and entropy into prompts to minimise prompt-cache hits"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+gemini = ["gemini-webapi>=2.1.1"]
+
+[project.scripts]
+prompt-entropy = "prompt_entropy:main"
+
+[tool.setuptools]
+py-modules = ["prompt_entropy", "loop_runtime", "gemini_uncached_loop"]

@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Secrets and cookies - never commit these
+.gemini-cookies.json
+cookies.json
+cookies*.json
+
+# Runtime artifacts
+*.log
+*.jsonl
+*.jsonl.*
+gemini_loop.state.json
+*.count.json
