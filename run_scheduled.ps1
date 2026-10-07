@@ -26,6 +26,9 @@
 .PARAMETER MaxPerDay
     Persistent daily request cap shared across runs (default: 100).
 
+.PARAMETER Level
+    Entropy preset: light, standard, or paranoid (default: standard).
+
 .PARAMETER LogFile
     Rotating JSONL log destination
     (default: %LOCALAPPDATA%\gemini-entropy\requests.jsonl).
@@ -39,6 +42,8 @@ param(
     [int]$Count = 10,
     [double]$Interval = 60,
     [int]$MaxPerDay = 100,
+    [ValidateSet("light", "standard", "paranoid")]
+    [string]$Level = "standard",
     [string]$LogFile = (Join-Path $env:LOCALAPPDATA "gemini-entropy\requests.jsonl"),
     [string]$Python = "python",
     [switch]$Temporary
@@ -60,6 +65,7 @@ New-Item -ItemType Directory -Force -Path (Split-Path -Parent $LogFile) | Out-Nu
 
 $loopArgs = @(
     (Join-Path $ProjectDir "gemini_uncached_loop.py"),
+    "--level", $Level,
     "--count", $Count,
     "--interval", $Interval,
     "--max-per-day", $MaxPerDay,

@@ -91,6 +91,23 @@ class CustomPromptTests(unittest.TestCase):
         for note in FILLER_MESSAGES:
             self.assertNotIn(note, proc.stdout)
 
+    def test_level_flag_light_disables_fillers_and_ref(self) -> None:
+        proc = run_loop(
+            "--dry-run",
+            "--count",
+            "1",
+            "--interval",
+            "0",
+            "--level",
+            "light",
+            "--prompt",
+            "Quiet prompt",
+        )
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertNotIn("ref:", proc.stdout)
+        for note in FILLER_MESSAGES:
+            self.assertNotIn(note, proc.stdout)
+
 
 class GuardTests(unittest.TestCase):
     def test_check_mode_requires_cookies(self) -> None:

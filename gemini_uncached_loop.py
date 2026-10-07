@@ -53,8 +53,9 @@ Unattended runs:
       wraps this for Windows Task Scheduler.
 
 Notes:
-    * ``--salt-length 0`` and ``--fillers 0`` disable the salt marker and
-      the filler messages if you want less noise around the prompt.
+    * ``--level`` picks the entropy preset (light, standard, paranoid);
+      ``--salt-length`` and ``--fillers`` override it, and 0 disables
+      either layer if you want less noise around the prompt.
     * Cookies are read locally only; this script stores nothing. Keep
       the values private and never commit them.
 """
@@ -71,7 +72,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from loop_runtime import DailyCounter, RotatingJsonlWriter, retry_delay
-from prompt_entropy import inject_entropy
+from prompt_entropy import ENTROPY_LEVELS, inject_entropy
 
 if TYPE_CHECKING:
     from gemini_webapi import GeminiClient
@@ -112,7 +113,12 @@ async def run_loop(client: GeminiClient | None, args: argparse.Namespace) -> tup
 
         attempt += 1
         topic = random.choice(args.prompt_pool)
-        prompt = inject_entropy(topic, salt_length=args.salt_length, fillers=args.fillers)
+        prompt = inject_entropy(
+            topic,
+            level=args.level,
+            salt_length=args.salt_length,
+            fillers=args.fillers,
+        )
         print(f"[{attempt}] Sending: {prompt}", flush=True)
 
         next_delay = args.interval
@@ -191,17 +197,23 @@ async def main(argv: list[str] | None = None) -> int:
         help="Number of requests to send; 0 means run until interrupted (default: 0).",
     )
     parser.add_argument(
+        "--level",
+        choices=sorted(ENTROPY_LEVELS),
+        default="standard",
+        help="Entropy preset: light (salt only), standard, or paranoid (default: standard).",
+    )
+    parser.add_argument(
         "--salt-length",
         type=int,
-        default=8,
-        help="Hex length of the random salt marker; 0 disables it (default: 8).",
+        default=None,
+        help="Hex length of the random salt marker; overrides the level preset; 0 disables it.",
     )
     parser.add_argument(
         "--fillers",
         type=int,
-        default=1,
-        help="Random filler messages injected into each request; "
-        "0 disables them (default: 1).",
+        default=None,
+        help="Random filler messages injected into each request; overrides the level "
+        "preset; 0 disables them.",
     )
     parser.add_argument(
         "--temporary",
@@ -288,9 +300,9 @@ async def main(argv: list[str] | None = None) -> int:
         parser.error("--count must be >= 0")
     if args.interval < 0:
         parser.error("--interval must be >= 0")
-    if args.salt_length < 0:
+    if args.salt_length is not None and args.salt_length < 0:
         parser.error("--salt-length must be >= 0")
-    if args.fillers < 0:
+    if args.fillers is not None and args.fillers < 0:
         parser.error("--fillers must be >= 0")
     if args.max_failures < 1:
         parser.error("--max-failures must be >= 1")
